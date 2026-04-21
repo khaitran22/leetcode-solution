@@ -1,4 +1,4 @@
-def solveSudoku(board) -> None:
+def solveSudoku_slow_TLError(board) -> None:
     """
     Do not return anything, modify board in-place instead.
     """
@@ -50,7 +50,7 @@ def solveSudoku(board) -> None:
     def solve(board, r, c, nums, used, false_boards):
         if isValidSudoku(board) and isFilled(board):
             return True
-        
+
         cell = board[r][c]
         if cell == ".":
             for left_num in nums:
@@ -89,7 +89,7 @@ def solveSudoku(board) -> None:
         else:
             increase = (c+1)//9
             return solve(board, r+increase, (c+1) %
-                  9, sorted(total_nums - used[r+increase]), used, false_boards)
+                         9, sorted(total_nums - used[r+increase]), used, false_boards)
 
     used = []
     for row in board:
@@ -102,31 +102,76 @@ def solveSudoku(board) -> None:
     solve(board, 0, 0, total_nums, used, false_boards)
 
 
+def solveSudoku_leetcode_accepted(board):
+
+    # Constraint-checking (used)
+    rows = [set() for _ in range(9)]
+    cols = [set() for _ in range(9)]
+    boxes = [set() for _ in range(9)]
+    filled_cells = set([])
+
+    for idx_r, r in enumerate(board):
+        for idx_c, c in enumerate(r):
+            if c != ".":
+                rows[idx_r].add(c)
+                cols[idx_c].add(c)
+                boxes[(idx_r // 3)*3 + idx_c // 3].add(c)
+                filled_cells.add((idx_r, idx_c))
+
+    def solve(board, r, c, filled_cells):
+
+        if len(filled_cells) == 81:
+            return True
+
+        if board[r][c] == ".":
+            for val in "123456789":
+                # Check isValid(board)
+                if val not in rows[r] and val not in cols[c] and val not in boxes[(r // 3)*3 + c // 3]:
+                    board[r][c] = val
+
+                    # save the current one
+                    rows[r].add(val)
+                    cols[c].add(val)
+                    boxes[(r // 3)*3 + c // 3].add(val)
+                    filled_cells.add((r, c))
+
+                    if solve(board, r+((c+1)//9), (c+1) % 9, filled_cells):
+                        return True
+                    else:
+                        # not consider this val anymore
+                        board[r][c] = "."
+                        rows[r].remove(val)
+                        cols[c].remove(val)
+                        boxes[(r // 3)*3 + c // 3].remove(val)
+                        filled_cells.remove((r, c))
+            return False
+        else:
+            return solve(board, r+((c+1)//9), (c+1) % 9, filled_cells)
+
+    solve(board, 0, 0, filled_cells)
+
+
 board = [
-    [".",".","9","7","4","8",".",".","."],
-    ["7",".",".",".",".",".",".",".","."],
-    [".","2",".","1",".","9",".",".","."],
-    [".",".","7",".",".",".","2","4","."],
-    [".","6","4",".","1",".","5","9","."],
-    [".","9","8",".",".",".","3",".","."],
-    [".",".",".","8",".","3",".","2","."],
-    [".",".",".",".",".",".",".",".","6"],
-    [".",".",".","2","7","5","9",".","."]
+    ["5", "3", ".", ".", "7", ".", ".", ".", "."],
+    ["6", ".", ".", "1", "9", "5", ".", ".", "."],
+    [".", "9", "8", ".", ".", ".", ".", "6", "."],
+    ["8", ".", ".", ".", "6", ".", ".", ".", "3"],
+    ["4", ".", ".", "8", ".", "3", ".", ".", "1"],
+    ["7", ".", ".", ".", "2", ".", ".", ".", "6"],
+    [".", "6", ".", ".", ".", ".", "2", "8", "."],
+    [".", ".", ".", "4", "1", "9", ".", ".", "5"],
+    [".", ".", ".", ".", "8", ".", ".", "7", "9"]
 ]
-# result = [
-#     ["5", "3", "4", "6", "7", "8", "9", "1", "2"],
-#     ["6", "7", "2", "1", "9", "5", "3", "4", "8"],
-#     ["1", "9", "8", "3", "4", "2", "5", "6", "7"],
-#     ["8", "5", "9", "7", "6", "1", "4", "2", "3"],
-#     ["4", "2", "6", "8", "5", "3", "7", "9", "1"],
-#     ["7", "1", "3", "9", "2", "4", "8", "5", "6"],
-#     ["9", "6", "1", "5", "3", "7", "2", "8", "4"],
-#     ["2", "8", "7", "4", "1", "9", "6", "3", "5"],
-#     ["3", "4", "5", "2", "8", "6", "1", "7", "9"]
-# ]
-solveSudoku(board)
-print("Result:")
-for r in board:
-    print(r)
-a = 1
-# assert board == result
+result = [
+    ["5", "3", "4", "6", "7", "8", "9", "1", "2"],
+    ["6", "7", "2", "1", "9", "5", "3", "4", "8"],
+    ["1", "9", "8", "3", "4", "2", "5", "6", "7"],
+    ["8", "5", "9", "7", "6", "1", "4", "2", "3"],
+    ["4", "2", "6", "8", "5", "3", "7", "9", "1"],
+    ["7", "1", "3", "9", "2", "4", "8", "5", "6"],
+    ["9", "6", "1", "5", "3", "7", "2", "8", "4"],
+    ["2", "8", "7", "4", "1", "9", "6", "3", "5"],
+    ["3", "4", "5", "2", "8", "6", "1", "7", "9"]
+]
+solveSudoku_leetcode_accepted(board)
+assert board == result
